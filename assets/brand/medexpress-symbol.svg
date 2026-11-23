@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="4 4 92 92" width="512" height="512">
+  <title>MedExpress symbol</title>
+  <defs><radialGradient id="mx-glow" gradientUnits="userSpaceOnUse" cx="50.0" cy="50.0" r="46.0">
+      <stop offset="0" stop-color="#E5FFFC"/><stop offset=".1" stop-color="#9FEAF8"/><stop offset=".23" stop-color="#0EBADE"/><stop offset=".31" stop-color="#0AB3DC"/><stop offset=".38" stop-color="#0899C8"/><stop offset=".46" stop-color="#0589BA"/><stop offset=".54" stop-color="#006EA5"/><stop offset=".63" stop-color="#005993"/><stop offset=".72" stop-color="#034A88"/><stop offset=".8" stop-color="#043C79"/><stop offset=".88" stop-color="#042E6A"/><stop offset="1" stop-color="#05133A"/>
+    </radialGradient></defs>
+  <g transform="translate(0.00 0.00) scale(1.0000)" fill="url(#mx-glow)"><path d="M47.5 47.5 L47.5 14.5 A10.5 10.5 0 0 0 26.5 14.5 L26.5 26.5 L14.5 26.5 A10.5 10.5 0 0 0 14.5 47.5 Z" transform="rotate(0 50 50)"/><path d="M47.5 47.5 L47.5 14.5 A10.5 10.5 0 0 0 26.5 14.5 L26.5 26.5 L14.5 26.5 A10.5 10.5 0 0 0 14.5 47.5 Z" transform="rotate(90 50 50)"/><path d="M47.5 47.5 L47.5 14.5 A10.5 10.5 0 0 0 26.5 14.5 L26.5 26.5 L14.5 26.5 A10.5 10.5 0 0 0 14.5 47.5 Z" transform="rotate(180 50 50)"/><path d="M47.5 47.5 L47.5 14.5 A10.5 10.5 0 0 0 26.5 14.5 L26.5 26.5 L14.5 26.5 A10.5 10.5 0 0 0 14.5 47.5 Z" transform="rotate(270 50 50)"/></g>
+</svg>
