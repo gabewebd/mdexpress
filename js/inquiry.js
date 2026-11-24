@@ -86,6 +86,16 @@ const V = {
    submit() resolves on success and rejects with an Error on failure. */
 const GHL_WEBHOOK_URL = 'https://services.leadconnectorhq.com/hooks/9q0CTnhy6NKDzAXMvEWp/webhook-trigger/8215d019-2d27-4d30-8ae3-97a707010f58';
 
+/* Where a successful inquiry lands. Paste the GHL funnel's thank-you step URL here
+   (for example 'https://your-domain.com/thank-you'). While it is empty, the form goes
+   to thank-you.html in this site's folder, next to index.html. */
+const THANK_YOU_URL = '';
+const scriptSrc = document.currentScript && document.currentScript.src;
+function thankYouUrl() {
+  if (THANK_YOU_URL) return THANK_YOU_URL;
+  return scriptSrc ? new URL('../thank-you.html', scriptSrc).href : new URL('thank-you.html', location.href).href;
+}
+
 const keyOf = (map, label) => Object.keys(map).find(k => map[k] === label) || '';
 // The record plus a few fields that make GHL branching and mapping simpler.
 function webhookPayload(r) {
@@ -101,7 +111,22 @@ function webhookPayload(r) {
     preferred_contact_key: keyOf(METHODS, r.preferred_contact), // whatsapp | messenger | email | phone
     priority: urgent ? 'Urgent' : 'Standard',
     submitted_at_boracay: manilaNow().toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true }),
-    page_url: location.href.split('#')[0]
+    page_url: location.href.split('#')[0],
+    ...displayFields(r)
+  };
+}
+// Ready-to-print text for the GHL emails, so a field that doesn't apply says why instead of showing blank.
+function displayFields(r) {
+  const appt = r.inquiry_type === TYPES.appointment;
+  return {
+    service_display: r.service_interest
+      || (r.inquiry_type === TYPES.service ? 'Not specified' : 'Not applicable (appointments, quotes and products only)'),
+    timing_display: r.preferred_timing === 'Scheduled'
+      ? [niceDate(r.preferred_date), r.preferred_time].filter(Boolean).join(' · ') || 'Scheduled'
+      : r.preferred_timing || 'Not applicable (appointments and hotel visits only)',
+    location_display: r.location || (appt ? 'Not applicable (clinic appointment)' : 'Not provided'),
+    email_display: r.email || 'Not provided',
+    message_display: r.message || 'None added'
   };
 }
 
@@ -134,6 +159,6 @@ async function submit(record) {
 window.MedXInquiry = {
   SERVICES, METHODS, TYPES, RECORD_LABELS, V,
   isCareService, manilaNow, isoOf, fmtTime, needsSchedule, fromIso, niceDate, typeOf,
-  draft, buildRecord, webhookPayload, submit, outbox
+  draft, buildRecord, webhookPayload, submit, outbox, thankYouUrl
 };
 })();
