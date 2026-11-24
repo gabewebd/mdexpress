@@ -48,9 +48,7 @@ None of them shows MedX staff or facilities. Replace them with MedX photography 
 - Clinic: Nirvana Resort, Balabag, Boracay (across Watsons). Open 24 hours, Monday to Sunday.
   Map: https://maps.app.goo.gl/uoZ6sVfWBKVU8GMU9 (resolves to the "MedExpress Medical And Diagnostic Center" Google Maps pin).
   The footer embeds a keyless Google Maps iframe at that pin (11.9617764, 121.9272301).
-- Messenger: **link pending**. When the Facebook page exists, replace the `<button data-channel="messenger">`
-  in the Message overlay with an `<a href="https://m.me/<page>">` styled like the WhatsApp row, and remove the
-  "link pending" tag in the footer.
+- Messenger / Facebook: https://www.facebook.com/MedExpressHealth (footer chip and the Message overlay row).
 
 ## CRM (GoHighLevel) integration
 

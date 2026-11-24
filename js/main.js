@@ -209,16 +209,12 @@
     });
   });
 
-  /* Messenger is not connected yet: say so instead of opening anything */
+  /* Announce which app is opening */
   var channelStatus = $('[data-channel-status]');
   $$('[data-channel]').forEach(function (ch) {
     ch.addEventListener('click', function () {
       var c = ch.getAttribute('data-channel');
-      if (c === 'messenger') {
-        channelStatus.textContent = 'Messenger isn’t connected yet. Use WhatsApp or text for now.';
-      } else {
-        channelStatus.textContent = c === 'whatsapp' ? 'Opening WhatsApp…' : 'Opening Messages…';
-      }
+      channelStatus.textContent = c === 'whatsapp' ? 'Opening WhatsApp…' : c === 'messenger' ? 'Opening Facebook…' : 'Opening Messages…';
     });
   });
 })();
