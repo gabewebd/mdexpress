@@ -61,7 +61,7 @@
   }
 
   /* ---------- Scroll reveals ---------- */
-  var revealTargets = $$('.reveal, .reveal-mask, .reveal-wipe, [data-steps], .benefit, .desk, .mx--closing');
+  var revealTargets = $$('.reveal, .reveal-mask, .reveal-wipe, [data-steps], .desk, .mx--closing');
   if ('IntersectionObserver' in window && !reduceMotion.matches) {
     var revealIO = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {

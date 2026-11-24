@@ -10,7 +10,6 @@
 
 const SERVICES = { hotel: 'Hotel visit', urgent: 'Urgent care', other: 'Other' };
 const METHODS  = { whatsapp: 'WhatsApp', messenger: 'Messenger', email: 'Email', phone: 'Phone call' };
-const CARE_FOR = { me: 'Me', someone: 'Someone else', child: 'A child' };
 // Inquiry types exactly as listed in the onboarding questionnaire.
 const TYPES = { appointment: 'Appointment Request', service: 'Service Inquiry', quote: 'Request for Quotation',
                 product: 'Product Availability', partnership: 'Partnership Inquiry', general: 'General Inquiry' };
@@ -26,7 +25,7 @@ const niceDate = v => v ? fromIso(v).toLocaleDateString('en-GB', { weekday: 'sho
 const typeOf = d => isCareService(d.service) ? 'appointment' : d.inquiryType;
 
 const draft = {
-  service: '', inquiryType: '', productService: '', careFor: '', location: '',
+  service: '', inquiryType: '', productService: '', location: '',
   timing: 'asap', prefDate: '', prefTime: '',
   fullName: '', mobile: '', email: '', preferredContact: '',
   message: ''
@@ -37,7 +36,6 @@ function buildRecord(source, d) {
     source,                                           // e.g. 'Website · Landing page form'
     inquiry_type: TYPES[typeOf(d)] || '',
     service_interest: isCareService(d.service) ? SERVICES[d.service] : (d.productService || '').trim(),
-    care_for: isCareService(d.service) ? (CARE_FOR[d.careFor] || '') : '',   // proposed field
     preferred_timing: needsSchedule(d) ? 'Scheduled' : (d.service === 'urgent' || d.service === 'hotel') ? 'As soon as possible' : '',
     preferred_date: needsSchedule(d) ? d.prefDate : '',
     preferred_time: needsSchedule(d) ? fmtTime(d.prefTime) : '',
@@ -54,7 +52,7 @@ function buildRecord(source, d) {
 }
 const RECORD_LABELS = {
   source: 'Source', inquiry_type: 'Inquiry type', service_interest: 'Product / service',
-  care_for: 'Care for', preferred_timing: 'Timing', preferred_date: 'Preferred date', preferred_time: 'Preferred time',
+  preferred_timing: 'Timing', preferred_date: 'Preferred date', preferred_time: 'Preferred time',
   booking_status: 'Booking status', full_name: 'Full name', mobile: 'Mobile', email: 'Email',
   preferred_contact: 'Preferred contact', location: 'Location', message: 'Message',
   consent_to_contact: 'Consent', created_at: 'Created'
@@ -95,7 +93,7 @@ function submit(record) {
 }
 
 window.MedXInquiry = {
-  SERVICES, METHODS, CARE_FOR, TYPES, RECORD_LABELS, V,
+  SERVICES, METHODS, TYPES, RECORD_LABELS, V,
   isCareService, manilaNow, isoOf, fmtTime, needsSchedule, fromIso, niceDate, typeOf,
   draft, buildRecord, submit, outbox
 };

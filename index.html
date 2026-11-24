@@ -126,15 +126,14 @@
 <header class="site-header" data-header>
   <div class="wrap site-header__inner">
     <a class="brand" href="#top" aria-label="MedX by MedExpress Medical and Diagnostic Center, back to top">
-      <img class="brand__logo brand__logo--on-dark" src="assets/brand/medexpress-logo-reversed.svg" alt="" width="776" height="160">
-      <img class="brand__logo brand__logo--on-light" src="assets/brand/medexpress-logo-original.svg" alt="" width="776" height="160">
+      <img class="brand__logo brand__logo--on-dark" src="assets/brand/medexpress-logo-reversed.svg" alt="" width="622" height="160">
+      <img class="brand__logo brand__logo--on-light" src="assets/brand/medexpress-logo-original.svg" alt="" width="622" height="160">
     </a>
     <nav class="site-nav" aria-label="Main">
       <ul>
         <li><a href="#services">Services</a></li>
         <li><a href="#how-it-works">How it works</a></li>
         <li><a href="#why-medx">Why MedX</a></li>
-        <li><a href="#contact">Contact</a></li>
       </ul>
     </nav>
     <div class="site-header__actions">
@@ -152,11 +151,7 @@
 <main id="main">
 
 <!-- ================= B. Hero ================= -->
-<section class="hero" id="top" aria-labelledby="hero-title">
-  <!-- Photo: the MedExpress clinic storefront (supplied by the client team), washed in navy and feathered into the ivory page below. Decorative. -->
-  <div class="hero__media" aria-hidden="true">
-    <img class="hero__bg" src="assets/images/2024-09-MedExpress-Clinic-Boracay-1-1024x768.webp" width="768" height="576" alt="" fetchpriority="high" decoding="async">
-  </div>
+<section class="hero section--navy" id="top" aria-labelledby="hero-title">
   <div class="wrap hero__stage">
     <div class="hero__copy">
       <p class="hero__kicker">Your trusted health partner</p>
@@ -174,12 +169,26 @@
         <span class="status"><span class="status__dot" aria-hidden="true"></span>Available 24/7</span>
       </p>
     </div>
+    <!-- Editorial cutout on a layered frame: a warm-white panel with one fully rounded corner and a solid navy edge,
+         flush to the right edge of the window. The head rises above the panel and the figure runs off the bottom of the hero.
+         Nurse image supplied by the client team (AI-generated), background removed. -->
+    <figure class="hero__figure" aria-hidden="true">
+      <span class="hero__panel">
+        <!-- The illuminated MedX cross, faint, as the hero background behind the nurse. -->
+        <svg class="mx mx--hero" viewBox="4 4 92 92" aria-hidden="true" data-converge>
+          <g class="mx__p" style="--dx:-1;--dy:-1"><use href="#mx-part"/></g>
+          <g class="mx__p" style="--dx:1;--dy:-1"><use href="#mx-part" transform="rotate(90 50 50)"/></g>
+          <g class="mx__p" style="--dx:1;--dy:1"><use href="#mx-part" transform="rotate(180 50 50)"/></g>
+          <g class="mx__p" style="--dx:-1;--dy:1"><use href="#mx-part" transform="rotate(270 50 50)"/></g>
+        </svg>
+      </span>
+      <img class="hero__person" src="assets/images/hero-nurse.webp" width="461" height="744" alt="" fetchpriority="high" decoding="async">
+    </figure>
   </div>
 </section>
 
 <!-- ================= C. Services ================= -->
 <section class="services section" id="services" aria-labelledby="services-title">
-  <svg class="mx mx--mono services__fragment" viewBox="4 4 92 92" aria-hidden="true" data-drift><g fill="currentColor"><use href="#mx-q"/><use href="#mx-q" transform="rotate(90 50 50)"/><use href="#mx-q" transform="rotate(180 50 50)"/><use href="#mx-q" transform="rotate(270 50 50)"/></g></svg>
   <div class="wrap">
     <header class="section-head services__head">
       <h2 class="h2" id="services-title">Care that meets you where you are.</h2>
@@ -189,8 +198,8 @@
     <article class="service service--hotel" aria-labelledby="svc-hotel">
       <figure class="service__media service__media--a reveal-mask">
         <span class="sheen" aria-hidden="true"></span>
-        <img src="assets/images/placeholder-hotel-visit-room.jpg" width="1600" height="1066" loading="lazy"
-             alt="A calm, sunlit bungalow bedroom with a made bed, wooden floor and open curtains.">
+        <img src="assets/images/placeholder-hotel-visit-room.jpg" width="1376" height="768" loading="lazy"
+             alt="A clinician checking a patient’s oxygen level with a pulse oximeter.">
       </figure>
       <div class="service__body reveal">
         <svg class="icon icon--lg service__icon" aria-hidden="true"><use href="#i-hotel"/></svg>
@@ -204,8 +213,8 @@
     <article class="service service--urgent" aria-labelledby="svc-urgent">
       <figure class="service__media service__media--b reveal-mask">
         <span class="sheen" aria-hidden="true"></span>
-        <img src="assets/images/placeholder-urgent-care-consultation.jpg" width="1400" height="2108" loading="lazy"
-             alt="Close-up of a blood pressure cuff being fitted on a patient’s arm.">
+        <img src="assets/images/placeholder-urgent-care-consultation.jpg" width="1029" height="768" loading="lazy"
+             alt="A clinician checking a patient’s blood pressure with a manual cuff.">
       </figure>
       <div class="service__body reveal">
         <svg class="icon icon--lg service__icon" aria-hidden="true"><use href="#i-urgent"/></svg>
@@ -254,45 +263,11 @@
   </div>
 </section>
 
-<!-- ================= E. Why MedX ================= -->
-<section class="why section section--navy" id="why-medx" aria-labelledby="why-title">
-  <svg class="mx mx--mono why__fragment" viewBox="4 4 92 92" aria-hidden="true" data-drift><g fill="currentColor"><use href="#mx-q"/><use href="#mx-q" transform="rotate(90 50 50)"/><use href="#mx-q" transform="rotate(180 50 50)"/><use href="#mx-q" transform="rotate(270 50 50)"/></g></svg>
-  <div class="wrap why__grid">
-    <div class="why__intro reveal">
-      <h2 class="h2" id="why-title">Your stay matters. <em>So does your health.</em></h2>
-      <p>MedX is a healthcare contact point for people visiting Boracay: one team to reach, at any hour, whether you need a visit at your accommodation or urgent care assistance.</p>
-      <button class="btn btn--light" type="button" data-open="contact">Contact Us<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button>
-    </div>
-    <ul class="benefits" role="list">
-      <li class="benefit">
-        <svg class="icon icon--lg" aria-hidden="true"><use href="#i-pin"/></svg>
-        <div><h3>Convenient access to care</h3><p>Reach a healthcare team from where you are, by form, message or phone.</p></div>
-      </li>
-      <li class="benefit">
-        <svg class="icon icon--lg" aria-hidden="true"><use href="#i-hotel"/></svg>
-        <div><h3>Hotel visits</h3><p>Ask for care at your hotel, resort or villa instead of setting out to find it.</p></div>
-      </li>
-      <li class="benefit">
-        <svg class="icon icon--lg" aria-hidden="true"><use href="#i-clock"/></svg>
-        <div><h3>Open 24 hours, every day</h3><p>Get in touch at any hour, including nights, weekends and holidays.</p></div>
-      </li>
-      <li class="benefit">
-        <svg class="icon icon--lg" aria-hidden="true"><use href="#i-message"/></svg>
-        <div><h3>Direct line to the team</h3><p>Speak with MedX directly by phone, WhatsApp, Messenger, text or email.</p></div>
-      </li>
-      <li class="benefit">
-        <svg class="icon icon--lg" aria-hidden="true"><use href="#i-inquiry"/></svg>
-        <div><h3>Made for visitors</h3><p>Healthcare assistance arranged around tourists and visitors staying in Boracay.</p></div>
-      </li>
-    </ul>
-  </div>
-</section>
-
 <!-- ================= F. Location / service context ================= -->
-<section class="place" id="boracay" aria-labelledby="place-title">
+<section class="place" id="why-medx" aria-labelledby="place-title">
   <figure class="place__media reveal-wipe">
-    <img src="assets/images/placeholder-boracay-white-beach.jpg" width="2200" height="1458" loading="lazy"
-         alt="Boracay’s White Beach under a soft, overcast sky, with palm trees and calm turquoise water.">
+    <img src="assets/images/placeholder-boracay-white-beach.jpg" width="1159" height="768" loading="lazy"
+         alt="Boracay’s White Beach with palm trees, turquoise water and guests enjoying the shore.">
   </figure>
   <div class="wrap place__wrap">
     <div class="place__panel reveal">
@@ -394,7 +369,7 @@
   <div class="wrap">
     <div class="site-footer__grid">
       <div class="site-footer__brand">
-        <img src="assets/brand/medexpress-logo-reversed.svg" alt="MedExpress Medical and Diagnostic Center" width="776" height="160" loading="lazy">
+        <img src="assets/brand/medexpress-logo-reversed.svg" alt="MedExpress Medical and Diagnostic Center" width="622" height="160" loading="lazy">
         <p>MedX is the healthcare brand of MedExpress Medical and Diagnostic Center.</p>
         <p class="site-footer__open"><span class="status__dot" aria-hidden="true"></span>Open 24 hours, Monday to Sunday</p>
       </div>
@@ -404,7 +379,6 @@
           <li><a href="#services">Services</a></li>
           <li><a href="#how-it-works">How it works</a></li>
           <li><a href="#why-medx">Why MedX</a></li>
-          <li><a href="#boracay">Boracay</a></li>
           <li><a href="#faq">Questions</a></li>
         </ul>
       </nav>
@@ -450,7 +424,7 @@
 <dialog class="overlay overlay--menu" id="dlg-menu" aria-label="Menu">
   <div class="overlay__panel">
     <div class="overlay__bar">
-      <img class="overlay__logo" src="assets/brand/medexpress-logo-original.svg" alt="" width="776" height="160">
+      <img class="overlay__logo" src="assets/brand/medexpress-logo-original.svg" alt="" width="622" height="160">
       <button class="icon-btn" type="button" data-close aria-label="Close menu"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
     </div>
     <nav class="menu" aria-label="Mobile">
@@ -458,7 +432,6 @@
       <a href="#how-it-works" data-close>How it works</a>
       <a href="#why-medx" data-close>Why MedX</a>
       <a href="#faq" data-close>Questions</a>
-      <a href="#contact" data-close>Contact</a>
     </nav>
     <div class="menu__actions">
       <button class="btn btn--primary btn--block" type="button" data-open="contact">Contact Us</button>
@@ -578,14 +551,6 @@
             <p class="field-error" id="err-productService" hidden></p>
           </div>
 
-          <div class="f-field" id="who-field" hidden>
-            <p class="lbl" id="who-lbl">Who needs care? <span class="f-opt">(optional)</span></p>
-            <div class="f-options options--methods options--who" role="radiogroup" aria-labelledby="who-lbl" id="grp-who">
-              <label class="f-option"><input type="radio" name="careFor" value="me"><b>Me</b></label>
-              <label class="f-option"><input type="radio" name="careFor" value="someone"><b>Someone else</b></label>
-              <label class="f-option"><input type="radio" name="careFor" value="child"><b>A child</b></label>
-            </div>
-          </div>
         </div>
       </section>
 

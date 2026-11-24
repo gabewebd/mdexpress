@@ -8,7 +8,7 @@
 'use strict';
 
 const M = window.MedXInquiry;
-const { SERVICES, METHODS, CARE_FOR, TYPES, RECORD_LABELS, V, isCareService, manilaNow, isoOf, fmtTime,
+const { SERVICES, METHODS, TYPES, RECORD_LABELS, V, isCareService, manilaNow, isoOf, fmtTime,
         needsSchedule, fromIso, niceDate, typeOf, draft, buildRecord } = M;
 
 /* ---------------- Utilities ---------------- */
@@ -96,7 +96,6 @@ const form = (() => {
   $$('input[name=service]', f).forEach(r => r.addEventListener('change', () => {
     draft.service = r.value; setError('service', ''); syncServiceExtras(true);
   }));
-  $$('input[name=careFor]', f).forEach(r => r.addEventListener('change', () => { draft.careFor = r.value; }));
   /* -- custom dropdown (listbox pattern, keyboard + pointer). Every dropdown uses this. -- */
   function makeDropdown(key, placeholder, onPick) {
     const wrap = $('#dd-' + key), btn = $('#' + key + '-btn'), list = $('#' + key + '-list'), input = f.elements[key];
@@ -380,7 +379,6 @@ const form = (() => {
       if (on && box.hidden && animate) box.classList.add('f-reveal'); else if (!animate) box.classList.remove('f-reveal');
       box.hidden = !on;
     });
-    $('#who-field').hidden = !care;
     if (pf) {
       $('#product-lbl').textContent = pf.label;
       $('#product-opt').hidden = pf.required;
@@ -507,7 +505,6 @@ const form = (() => {
       group('Inquiry', 1, val(TYPES[draft.inquiryType]));
       if (draft.productService.trim()) group('Product / service', 1, val(draft.productService.trim()));
     }
-    if (care && draft.careFor) group('Care for', 1, val(CARE_FOR[draft.careFor]));
     if (!(draft.service === 'other' && draft.inquiryType === 'appointment')) group('Location', 2, val(draft.location.trim(), 'Not given'));
     if (needsSchedule(draft)) {
       const box = el('div');
@@ -620,7 +617,7 @@ const form = (() => {
 
   function reset() {
     // Keep contact details so the visitor never retypes them; clear the request itself.
-    Object.assign(draft, { service: '', inquiryType: '', productService: '', careFor: '', location: '', message: '', timing: 'asap', prefDate: '', prefTime: '' });
+    Object.assign(draft, { service: '', inquiryType: '', productService: '', location: '', message: '', timing: 'asap', prefDate: '', prefTime: '' });
     consent = false; isSubmitted = false; editingFromReview = false;
     $('#consent').checked = false;
     ['service', 'inquiryType', 'productService', 'location', 'message', 'prefDate', 'prefTime', 'consent'].forEach(n => setError(n, ''));
@@ -629,7 +626,6 @@ const form = (() => {
 
   function prefill() {
     $$('input[name=service]', f).forEach(r => r.checked = r.value === draft.service);
-    $$('input[name=careFor]', f).forEach(r => r.checked = r.value === draft.careFor);
     typeDropdown.set(draft.inquiryType); typeDropdown.close();
     timePicker.set(draft.prefTime); timePicker.close();
     datePicker.set(draft.prefDate); datePicker.close();

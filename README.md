@@ -29,17 +29,16 @@ assets/fonts/              Newsreader (display) and Instrument Sans (UI), self-h
 
 ## Replacing the placeholder photos
 
-Every photo is free-licence Unsplash stock, graded to one warm, soft treatment, and named `placeholder-*.jpg`.
+Every photo is free-licence Unsplash or Pexels stock, graded to one warm, soft treatment, and named `placeholder-*.jpg`.
 None of them shows MedX staff or facilities. Replace them with MedX photography using the same file names
 (or update the `src` in `index.html`). The origin is also embedded in each JPEG's comment field.
 
 | File | Where it's used | Origin |
 |---|---|---|
-| `medexpress-clinic-storefront.jpg` | Hero background, under a navy wash (real MedExpress storefront, supplied 2026-11-23; 768×576, replace with a larger original if available) | client team |
-| `placeholder-hero-paraw-white-beach.jpg` | Hero, inside the lower-left quadrant of the opened MedX cross (square crop) | unsplash.com/photos/4WGNVy0GOos |
+| `hero-nurse.webp` | Hero, right side: nurse in navy scrubs, from the client's Firefly.png, light-blue scrubs (transparent WebP, 461×744), in front of the glowing MedX cross on navy. AI-generated image supplied by the client team, so not a real MedX nurse. A larger original (about 1000px wide or more) would look sharper on retina screens | client team (AI-generated) |
 | `placeholder-hotel-visit-room.jpg` | Services, Hotel visits (square, one fully rounded corner) | unsplash.com/photos/7ZD_JIwl410 |
 | `placeholder-urgent-care-consultation.jpg` | Services, Urgent care (square, one fully rounded corner) | unsplash.com/photos/XdErxxR6Xog |
-| `placeholder-boracay-white-beach.jpg` | Boracay section, full width | unsplash.com/photos/WRS-dsMTohQ |
+| `medexpress-clinic-storefront.jpg` | Boracay section (#why-medx), full width: the real MedExpress storefront | client team |
 
 ## Contact details
 
