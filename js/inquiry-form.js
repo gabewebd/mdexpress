@@ -423,7 +423,8 @@ const form = (() => {
   }
   // The name and number must match the app we'll reply on.
   function syncMethodHints() {
-    $('#hint-fullName').hidden = draft.preferredContact !== 'messenger';
+    const nameHint = $('#hint-fullName'); // missing on pages pasted before this hint existed
+    if (nameHint) nameHint.hidden = draft.preferredContact !== 'messenger';
     $('#hint-mobile').textContent = draft.preferredContact === 'whatsapp'
       ? 'Your WhatsApp number, with country code.' : 'Include your country code.';
   }
