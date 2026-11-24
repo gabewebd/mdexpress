@@ -349,3 +349,4 @@ dialog.mxf.mxf--compact{top:auto;bottom:0;height:auto;max-height:calc(var(--vv-h
 .mxf .options--types{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .mxf .options--types .f-option{grid-template-columns:minmax(0,1fr);justify-items:center;text-align:center;padding:12px 10px;min-height:52px}
 .mxf .options--types .f-option b{font-size:15px}
+.mxf .options--methods:not(.options--who) .f-option:last-child:nth-child(odd){grid-column:1 / -1}

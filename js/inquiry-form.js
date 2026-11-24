@@ -539,7 +539,8 @@ const form = (() => {
         ? `Requested: ${niceDate(draft.prefDate)}, ${fmtTime(draft.prefTime)}. We’ll confirm with you.`
         : 'We’ll confirm the details with you.'));
     }
-    $('#form-record').replaceChildren(renderRecord(rec));
+    const recBox = $('#form-record');   // the CRM-preview panel was prototype-only; keep the slot empty
+    if (recBox) recBox.replaceChildren();
   }
 
   /* -- footer per step -- */
@@ -558,7 +559,7 @@ const form = (() => {
         : n === 4 ? 'Submit inquiry' : 'Continue';
     }
     $('#progress').hidden = n === 5;
-    count.textContent = n === 5 ? 'Inquiry received · demo' : `Step ${n} of ${TOTAL}`;
+    count.textContent = n === 5 ? 'Inquiry sent' : `Step ${n} of ${TOTAL}`;
     bars.forEach((b, i) => b.classList.toggle('done', i < n));
   }
 
