@@ -79,11 +79,50 @@ const V = {
 };
 
 /* ---------- Integration point ----------
-   Replace the body of submit() with the GHL call (for example a webhook or
-   the inbound-lead endpoint) when the client approves the integration.
-   It must resolve on success and reject with an Error on failure. */
+   GoHighLevel (GHL) inbound webhook. Paste the URL from the workflow's
+   "Inbound Webhook" trigger below. While it is empty, submissions stay
+   simulated (nothing leaves the browser). The GHL endpoint allows
+   cross-origin JSON posts, so no server is needed.
+   submit() resolves on success and rejects with an Error on failure. */
+const GHL_WEBHOOK_URL = 'https://services.leadconnectorhq.com/hooks/9q0CTnhy6NKDzAXMvEWp/webhook-trigger/8215d019-2d27-4d30-8ae3-97a707010f58';
+
+const keyOf = (map, label) => Object.keys(map).find(k => map[k] === label) || '';
+// The record plus a few fields that make GHL branching and mapping simpler.
+function webhookPayload(r) {
+  const parts = (r.full_name || '').trim().split(/\s+/);
+  const urgent = r.preferred_timing === 'As soon as possible';
+  const svcKey = keyOf(SERVICES, r.service_interest) || (r.service_interest ? 'other' : '');
+  return {
+    ...r,
+    first_name: parts[0] || '',
+    last_name: parts.slice(1).join(' '),
+    service_key: svcKey,                                  // hotel | urgent | other
+    inquiry_type_key: keyOf(TYPES, r.inquiry_type),       // appointment | service | quote | ...
+    preferred_contact_key: keyOf(METHODS, r.preferred_contact), // whatsapp | messenger | email | phone
+    priority: urgent ? 'Urgent' : 'Standard',
+    submitted_at_boracay: manilaNow().toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true }),
+    page_url: location.href.split('#')[0]
+  };
+}
+
 const outbox = [];
-function submit(record) {
+async function submit(record) {
+  if (GHL_WEBHOOK_URL) {
+    if (!navigator.onLine) throw new Error('offline');
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 15000);
+    try {
+      const res = await fetch(GHL_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(webhookPayload(record)),
+        signal: ctrl.signal
+      });
+      if (!res.ok) throw new Error(`webhook ${res.status}`);
+      outbox.push(record);
+      return { ok: true, simulated: false };
+    } finally { clearTimeout(timer); }
+  }
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       if (!navigator.onLine) { reject(new Error('offline')); return; }
@@ -95,6 +134,6 @@ function submit(record) {
 window.MedXInquiry = {
   SERVICES, METHODS, TYPES, RECORD_LABELS, V,
   isCareService, manilaNow, isoOf, fmtTime, needsSchedule, fromIso, niceDate, typeOf,
-  draft, buildRecord, submit, outbox
+  draft, buildRecord, webhookPayload, submit, outbox
 };
 })();
