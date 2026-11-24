@@ -563,18 +563,34 @@ const form = (() => {
   }
 
   /* -- step transitions: old leaves while new enters (one container, popLayout) -- */
+  // Steps that are still animating out, mapped to the function that finishes their exit.
+  const leaving = new Map();
+  const finishLeave = step => { const done = leaving.get(step); if (done) done(); };
   function go(n, dir) {
     if (n === current) return;
     dir = dir || (n > current ? 'fwd' : 'back');
     const from = steps[current - 1], to = steps[n - 1];
     if (n === 4) renderReview();
     current = n;
+    finishLeave(to);   // coming back to a step that is still on its way out: end that exit first
     // outgoing: taken out of flow immediately so the new step doesn't wait for it
     from.classList.remove('enter-fwd', 'enter-back');
     from.classList.add('leaving', 'leave-' + dir);
-    const cleanup = () => { from.hidden = true; from.classList.remove('leaving', 'leave-fwd', 'leave-back'); };
-    from.addEventListener('animationend', cleanup, { once: true });
-    setTimeout(cleanup, 220);
+    // Finish the exit once: on the step's OWN animationend (not a date picker or checkmark inside it)
+    // or after a timeout on slow devices. Never hide the step that is showing now, and never leave
+    // a listener behind that could hide a step later (that left the form body blank).
+    let timer = 0;
+    const onEnd = e => { if (e.target === from) done(); };
+    const done = () => {
+      clearTimeout(timer);
+      from.removeEventListener('animationend', onEnd);
+      leaving.delete(from);
+      from.classList.remove('leaving', 'leave-fwd', 'leave-back');
+      if (from !== steps[current - 1]) from.hidden = true;
+    };
+    leaving.set(from, done);
+    from.addEventListener('animationend', onEnd);
+    timer = setTimeout(done, 260);
     to.hidden = false;
     to.classList.remove('enter-fwd', 'enter-back');
     void to.offsetWidth;
@@ -644,6 +660,7 @@ const form = (() => {
   }
 
   function showOnly(n) {
+    [...leaving.values()].forEach(done => done());
     steps.forEach((s, i) => { s.hidden = i !== n - 1; s.classList.remove('leaving', 'leave-fwd', 'leave-back', 'enter-fwd', 'enter-back'); });
     current = n;
     syncChrome();
