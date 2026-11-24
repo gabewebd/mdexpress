@@ -1,0 +1,3 @@
+# Pages and extracted inline scripts stay local; the repo carries only assets/, css/ and js/
+/*.html
+/.script-*.js
