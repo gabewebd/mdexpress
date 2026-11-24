@@ -159,7 +159,14 @@ const form = (() => {
     list.addEventListener('focusout', e => { if (!wrap.contains(e.relatedTarget)) closeList(false); });
     return { set, close: () => closeList(false) };
   }
-  const typeDropdown = makeDropdown('inquiryType', 'Choose one', v => { draft.inquiryType = v; setError('inquiryType', ''); syncServiceExtras(true); });
+  /* -- inquiry type: option tiles (radios). Falls back to the old dropdown if a page still has that markup. -- */
+  const pickType = v => { draft.inquiryType = v; setError('inquiryType', ''); syncServiceExtras(true); };
+  const typeDropdown = $('#dd-inquiryType') ? makeDropdown('inquiryType', 'Choose one', pickType) : {
+    set: v => $$('input[name=inquiryType]', f).forEach(r => { r.checked = r.value === v; }),
+    close: () => {}
+  };
+  $$('input[name=inquiryType]', f).forEach(r => r.addEventListener('change', () => pickType(r.value)));
+  const typeTarget = () => $('#grp-inquiryType') || $('#inquiryType-btn');
 
   /* -- custom date picker (dialog + grid of day buttons). Every date field uses this. -- */
   const datePicker = (() => {
@@ -426,7 +433,7 @@ const form = (() => {
   function setError(name, msg) {
     const err = $('#err-' + name);
     if (!err) return;
-    const target = name === 'service' ? $('#grp-service') : (name === 'inquiryType' || name === 'prefTime' || name === 'prefDate') ? $('#' + name + '-btn') : name === 'preferredContact' ? $('#grp-method') : name === 'consent' ? $('#consent') : f.elements[name];
+    const target = name === 'service' ? $('#grp-service') : name === 'inquiryType' ? typeTarget() : (name === 'prefTime' || name === 'prefDate') ? $('#' + name + '-btn') : name === 'preferredContact' ? $('#grp-method') : name === 'consent' ? $('#consent') : f.elements[name];
     if (msg) {
       err.replaceChildren(svgUse('i-alert', 'icon'), el('span', null, msg));
       err.hidden = false;
@@ -457,7 +464,7 @@ const form = (() => {
     const bad = [];
     if (n === 1) {
       if (!draft.service) { setError('service', 'Choose an option.'); bad.push($('input[name=service]', f)); }
-      if (draft.service === 'other' && !draft.inquiryType) { setError('inquiryType', 'Choose a topic.'); bad.push($('#inquiryType-btn')); }
+      if (draft.service === 'other' && !draft.inquiryType) { setError('inquiryType', 'Choose a topic.'); bad.push($('input[name=inquiryType]', f) || $('#inquiryType-btn')); }
       else if (!validateField('productService')) bad.push(f.elements.productService);
     }
     if (n === 2) {
