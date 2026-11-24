@@ -338,8 +338,7 @@ const form = (() => {
     draft.timing = r.value; syncStep2(true);
   }));
   $$('input[name=preferredContact]', f).forEach(r => r.addEventListener('change', () => {
-    draft.preferredContact = r.value; setError('preferredContact', ''); syncEmailRequired();
-    if (r.value !== 'email' && f.elements.email.getAttribute('aria-invalid') === 'true' && !f.elements.email.value.trim()) setError('email', '');
+    draft.preferredContact = r.value; setError('preferredContact', ''); syncMethodHints();
   }));
   $('#consent').addEventListener('change', e => { consent = e.target.checked; if (consent) setError('consent', ''); });
 
@@ -422,10 +421,11 @@ const form = (() => {
     if (msgOptional) setError('message', '');
     if (!care) setError('location', '');
   }
-  function syncEmailRequired() {
-    const req = draft.preferredContact === 'email';
-    $('#email-opt').hidden = req;
-    f.elements.email.required = req;
+  // The name and number must match the app we'll reply on.
+  function syncMethodHints() {
+    $('#hint-fullName').hidden = draft.preferredContact !== 'messenger';
+    $('#hint-mobile').textContent = draft.preferredContact === 'whatsapp'
+      ? 'Your WhatsApp number, with country code.' : 'Include your country code.';
   }
 
   /* -- errors -- */
@@ -454,7 +454,7 @@ const form = (() => {
     }
     else if (name === 'location') msg = care ? V.location(v) : '';
     else if (name === 'message') msg = !care && draft.inquiryType !== 'appointment' && !v.trim() ? 'Tell us briefly what you need.' : '';
-    else if (name === 'email') msg = V.email(v, draft.preferredContact === 'email');
+    else if (name === 'email') msg = V.email(v, true);
     else if (V[name]) msg = V[name](v);
     setError(name, msg);
     return !msg;
@@ -656,7 +656,7 @@ const form = (() => {
     $$('input[name=preferredContact]', f).forEach(r => r.checked = r.value === draft.preferredContact);
     fields.forEach(n => { f.elements[n].value = draft[n]; });
     $('#msg-count').textContent = draft.message.length + '/1000';
-    syncServiceExtras(false); syncEmailRequired(); syncChips();
+    syncServiceExtras(false); syncMethodHints(); syncChips();
   }
 
   function showOnly(n) {
