@@ -187,7 +187,13 @@ dialog.mxf.is-open::backdrop{opacity:1}
 .mxf .input{display:block;width:100%;min-height:52px;padding:13px 14px;border:1px solid var(--line-strong);border-radius:var(--r);background:#fff;color:var(--ink);font-size:16px;line-height:1.4;caret-color:var(--blue);transition:border-color 160ms ease,box-shadow 160ms ease;-webkit-appearance:none;appearance:none}
 .mxf .input::placeholder{color:var(--placeholder);opacity:1}
 .mxf .input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(36,80,200,.16)}
-.mxf .input[aria-invalid="true"]{border-color:var(--red)}
+/* Step 3: the field MedX will use for the chosen contact method */
+.mxf .key-tag{display:inline-flex;align-items:center;margin-left:8px;padding:2px 8px;border-radius:999px;background:var(--select);color:var(--blue);font-size:12.5px;font-weight:600;letter-spacing:.01em;vertical-align:1px}
+.mxf .f-field.is-key .lbl{color:var(--blue)}
+.mxf .f-field.is-key .input{border-color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue)}
+.mxf .f-field.is-key .input:focus{box-shadow:inset 0 0 0 1px var(--blue),0 0 0 3px rgba(36,80,200,.16)}
+.mxf .f-field.is-key .key-tag{animation:mxf-reveal 240ms var(--ease-out) backwards}
+.mxf .input[aria-invalid="true"],.mxf .f-field.is-key .input[aria-invalid="true"]{border-color:var(--red);box-shadow:none}
 .mxf .input[aria-invalid="true"]:focus{box-shadow:0 0 0 3px rgba(179,42,55,.14)}
 .mxf .input-wrap{position:relative}
 .mxf .input-wrap .icon{position:absolute;left:14px;top:15px;color:var(--muted);pointer-events:none}

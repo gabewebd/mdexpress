@@ -40,6 +40,18 @@
     }, { rootMargin: '-64px 0px 0px 0px', threshold: 0 }).observe(hero);
   }
 
+  /* Phone action bar (Contact / Call / Message): only once the hero has scrolled past */
+  var actionBar = $('.action-bar');
+  if (actionBar) {
+    if ('IntersectionObserver' in window && hero) {
+      new IntersectionObserver(function (entries) {
+        actionBar.classList.toggle('is-shown', !entries[0].isIntersecting);
+      }, { threshold: 0 }).observe(hero);
+    } else {
+      actionBar.classList.add('is-shown');
+    }
+  }
+
   /* Active section in the nav */
   var navLinks = $$('.site-nav a');
   var sectionMap = {};

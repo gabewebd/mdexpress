@@ -80,6 +80,9 @@ const form = (() => {
   const attempted = new Set();
 
   const fields = ['productService', 'location', 'fullName', 'mobile', 'email', 'message'];
+  // Which step-3 field each contact method relies on, and the tag shown on its label.
+  const KEY_FIELD = { whatsapp: 'mobile', messenger: 'fullName', email: 'email', phone: 'mobile' };
+  const KEY_TAG = { whatsapp: 'For WhatsApp', messenger: 'For Messenger', email: 'For email', phone: 'For calls' };
 
   /* -- bind inputs to the shared draft -- */
   fields.forEach(name => {
@@ -92,8 +95,23 @@ const form = (() => {
     });
     input.addEventListener('blur', () => { if (input.value.trim()) validateField(name); });
   });
+  /* -- after a tile pick, scroll the sheet so the question it revealed is in view -- */
+  function revealNext(target) {
+    if (!target || target.hidden || target.offsetParent === null) return;
+    // Wait a frame so the newly shown block has its size, then scroll only as far as needed.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const b = body.getBoundingClientRect(), r = target.getBoundingClientRect();
+      const foot = 16, head = 12;
+      let delta = 0;
+      if (r.bottom > b.bottom - foot) delta = r.bottom - (b.bottom - foot);
+      if (r.top - delta < b.top + head) delta = r.top - (b.top + head);   // never push its top out of view
+      if (delta > 1) body.scrollBy({ top: delta, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+    }));
+  }
+
   $$('input[name=service]', f).forEach(r => r.addEventListener('change', () => {
     draft.service = r.value; setError('service', ''); syncServiceExtras(true);
+    revealNext(r.value === 'urgent' ? $('#urgent-note') : r.value === 'other' ? $('#type-field') : null);
   }));
   /* -- custom dropdown (listbox pattern, keyboard + pointer). Every dropdown uses this. -- */
   function makeDropdown(key, placeholder, onPick) {
@@ -164,7 +182,10 @@ const form = (() => {
     set: v => $$('input[name=inquiryType]', f).forEach(r => { r.checked = r.value === v; }),
     close: () => {}
   };
-  $$('input[name=inquiryType]', f).forEach(r => r.addEventListener('change', () => pickType(r.value)));
+  $$('input[name=inquiryType]', f).forEach(r => r.addEventListener('change', () => {
+    pickType(r.value);
+    revealNext($('#product-field'));
+  }));
   const typeTarget = () => $('#grp-inquiryType') || $('#inquiryType-btn');
 
   /* -- custom date picker (dialog + grid of day buttons). Every date field uses this. -- */
@@ -336,9 +357,11 @@ const form = (() => {
 
   $$('input[name=timing]', f).forEach(r => r.addEventListener('change', () => {
     draft.timing = r.value; syncStep2(true);
+    if (r.value === 'scheduled') revealNext($('#schedule-field'));
   }));
   $$('input[name=preferredContact]', f).forEach(r => r.addEventListener('change', () => {
     draft.preferredContact = r.value; setError('preferredContact', ''); syncMethodHints();
+    revealNext($('#fld-' + KEY_FIELD[r.value]));
   }));
   $('#consent').addEventListener('change', e => { consent = e.target.checked; if (consent) setError('consent', ''); });
 
@@ -427,6 +450,16 @@ const form = (() => {
     if (nameHint) nameHint.hidden = draft.preferredContact !== 'messenger';
     $('#hint-mobile').textContent = draft.preferredContact === 'whatsapp'
       ? 'Your WhatsApp number, with country code.' : 'Include your country code.';
+    // Highlight the field (and label) we'll use to reach them.
+    const key = KEY_FIELD[draft.preferredContact];
+    ['fullName', 'mobile', 'email'].forEach(name => {
+      const fld = $('#fld-' + name);
+      if (!fld) return;
+      const on = name === key;
+      fld.classList.toggle('is-key', on);
+      const tag = $('.key-tag', fld);
+      if (tag) { tag.hidden = !on; tag.textContent = on ? KEY_TAG[draft.preferredContact] : ''; }
+    });
   }
 
   /* -- errors -- */
@@ -476,10 +509,10 @@ const form = (() => {
       if (!validateField('message')) bad.push(f.elements.message);
     }
     if (n === 3) {
+      if (!draft.preferredContact) { setError('preferredContact', 'Choose a contact method.'); bad.push($('input[name=preferredContact]', f)); }
       if (!validateField('fullName')) bad.push(f.elements.fullName);
       if (!validateField('mobile')) bad.push(f.elements.mobile);
       if (!validateField('email')) bad.push(f.elements.email);
-      if (!draft.preferredContact) { setError('preferredContact', 'Choose a contact method.'); bad.push($('input[name=preferredContact]', f)); }
     }
     if (n === 4 && !consent) { setError('consent', 'Please tick the box to continue.'); bad.push($('#consent')); }
     if (bad.length) {
@@ -518,6 +551,7 @@ const form = (() => {
       box.append(val(niceDate(draft.prefDate) + ' · ' + fmtTime(draft.prefTime)), el('p', 'val-note', 'To be confirmed by our team.'));
       group('Preferred date & time', 2, box);
     } else if (draft.service === 'hotel') group('When', 2, val('As soon as possible'));
+    group('Preferred contact', 3, val(METHODS[draft.preferredContact]));
     const dl = el('dl');
     [['Name', draft.fullName], ['Mobile', draft.mobile], ['Email', draft.email]].forEach(([k, v]) => {
       const row = el('div'); const dd = el('dd', v.trim() ? '' : 'empty');
@@ -525,7 +559,6 @@ const form = (() => {
       row.append(el('dt', null, k), dd); dl.append(row);
     });
     group('Contact details', 3, dl);
-    group('Preferred contact', 3, val(METHODS[draft.preferredContact]));
     group(care || draft.inquiryType === 'appointment' ? 'Additional details' : 'Message', 2, val(draft.message.trim(), 'None added'));
   }
 
