@@ -669,7 +669,7 @@ dialog.overlay.is-closing .overlay__panel { transition-duration: .26s, .2s; tran
     box-shadow: 0 -6px 24px -12px rgba(15, 23, 51, .4);
     transition: transform .4s var(--ease-out), visibility 0s linear .4s;
   }
-  /* Hidden while the hero (which has its own Contact Us / Call buttons) is on screen; main.js adds is-shown after it */
+  /* Hidden until the hero's own Contact Us / Call buttons scroll out of view; main.js adds is-shown */
   .action-bar:not(.is-shown) { transform: translateY(100%); visibility: hidden; }
   .action-bar.is-shown { transition: transform .4s var(--ease-out), visibility 0s; }
   .action-bar__btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 68px; font-weight: 600; font-size: .84375rem; letter-spacing: .01em; color: #fff; transition: background-color .14s ease; }

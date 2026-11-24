@@ -40,13 +40,17 @@
     }, { rootMargin: '-64px 0px 0px 0px', threshold: 0 }).observe(hero);
   }
 
-  /* Phone action bar (Contact / Call / Message): only once the hero has scrolled past */
+  /* Phone action bar (Contact / Call / Message): appears as soon as the hero's own
+     Contact Us / Call buttons scroll up out of view (under the header), and hides again when they return */
   var actionBar = $('.action-bar');
+  var heroActions = $('.hero__actions');
   if (actionBar) {
-    if ('IntersectionObserver' in window && hero) {
+    if ('IntersectionObserver' in window && heroActions) {
       new IntersectionObserver(function (entries) {
-        actionBar.classList.toggle('is-shown', !entries[0].isIntersecting);
-      }, { threshold: 0 }).observe(hero);
+        var e = entries[0];
+        var passed = !e.isIntersecting && e.boundingClientRect.top < (e.rootBounds ? e.rootBounds.top : 0);
+        actionBar.classList.toggle('is-shown', passed);
+      }, { rootMargin: '-64px 0px 0px 0px', threshold: 0 }).observe(heroActions);
     } else {
       actionBar.classList.add('is-shown');
     }
