@@ -33,7 +33,6 @@ function renderRecord(rec) {
   const s = el('summary');
   s.append(el('span', null, 'Inquiry record · CRM preview'), svgUse('i-chev', 'icon icon-sm'));
   const body = el('div', 'rec-body');
-  body.append(el('p', 'rec-note', 'How this maps to the CRM. Not sent anywhere.'));
   const dl = el('dl');
   Object.keys(RECORD_LABELS).forEach(k => {
     const row = el('div');
