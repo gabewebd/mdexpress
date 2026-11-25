@@ -32,11 +32,14 @@ const needsSchedule = d => (d.service === 'hotel' && d.timing === 'scheduled') |
 const fromIso = v => { const [y, m, dd] = v.split('-').map(Number); return new Date(y, m - 1, dd); };
 const niceDate = v => v ? fromIso(v).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : '';
 const typeOf = d => isCareService(d.service) ? 'appointment' : d.inquiryType;
+// The WhatsApp number, when WhatsApp is the chosen method: the mobile number unless they gave a separate one.
+const waNumberOf = d => d.preferredContact !== 'whatsapp' ? '' : ((d.waSame === false ? d.whatsapp : d.mobile) || '').trim();
 
 const draft = {
   service: '', inquiryType: '', productService: '', location: '',
   timing: 'asap', prefDate: '', prefTime: '',
   fullName: '', mobile: '', email: '', preferredContact: '',
+  waSame: true, whatsapp: '',   // WhatsApp on the mobile number, or a separate WhatsApp number
   message: ''
 };
 
@@ -51,6 +54,7 @@ function buildRecord(source, d) {
     booking_status: typeOf(d) === 'appointment' ? 'Requested · to be confirmed' : '',
     full_name: d.fullName || '',
     mobile: d.mobile || '',
+    whatsapp_number: waNumberOf(d),
     email: d.email || '',
     preferred_contact: METHODS[d.preferredContact] || '',
     location: d.location || '',
@@ -62,7 +66,7 @@ function buildRecord(source, d) {
 const RECORD_LABELS = {
   source: 'Source', inquiry_type: 'Inquiry type', service_interest: 'Product / service',
   preferred_timing: 'Timing', preferred_date: 'Preferred date', preferred_time: 'Preferred time',
-  booking_status: 'Booking status', full_name: 'Full name', mobile: 'Mobile', email: 'Email',
+  booking_status: 'Booking status', full_name: 'Full name', mobile: 'Mobile', whatsapp_number: 'WhatsApp', email: 'Email',
   preferred_contact: 'Preferred contact', location: 'Location', message: 'Message',
   consent_to_contact: 'Consent', created_at: 'Created'
 };
@@ -71,6 +75,7 @@ const RECORD_LABELS = {
 const digitsOf = v => (v || '').replace(/\D/g, '');
 const V = {
   fullName(v) { return v.trim() ? '' : 'Enter your name.'; },
+  whatsapp(v) { return v.trim() ? V.mobile(v) : 'Enter your WhatsApp number.'; },
   mobile(v) {
     const t = v.trim();
     if (!t) return 'Enter your mobile number.';
@@ -135,6 +140,7 @@ function displayFields(r) {
       : r.preferred_timing || 'Not applicable (appointments and hotel visits only)',
     location_display: r.location || (appt ? 'Not applicable (clinic appointment)' : 'Not provided'),
     email_display: r.email || 'Not provided',
+    whatsapp_display: r.whatsapp_number || 'Not applicable (WhatsApp not chosen)',
     message_display: r.message || 'None added'
   };
 }
@@ -168,7 +174,7 @@ async function submit(record) {
 window.MedXInquiry = {
   SERVICES, METHODS, TYPES, RECORD_LABELS, V,
   isCareService, manilaNow, isoOf, fmtTime, needsSchedule, fromIso, niceDate, typeOf,
-  draft, buildRecord, webhookPayload, submit, outbox, thankYouUrl
+  draft, waNumberOf, buildRecord, webhookPayload, submit, outbox, thankYouUrl
 };
 })();
 
@@ -185,7 +191,7 @@ window.MedXInquiry = {
 
 const M = window.MedXInquiry;
 const { SERVICES, METHODS, TYPES, RECORD_LABELS, V, isCareService, manilaNow, isoOf, fmtTime,
-        needsSchedule, fromIso, niceDate, typeOf, draft, buildRecord } = M;
+        needsSchedule, fromIso, niceDate, typeOf, draft, waNumberOf, buildRecord } = M;
 
 /* ---------------- Utilities ---------------- */
 const $ = (s, el = document) => el.querySelector(s);
@@ -242,6 +248,22 @@ document.addEventListener('focusin', e => {
    ====================================================================== */
 const form = (() => {
   const f = $('#inquiry-form');
+  /* WhatsApp: a "same number" checkbox under Mobile, and a WhatsApp number field for when it isn't.
+     Built here rather than in the page markup, so a page pasted into GHL before this existed still gets it. */
+  if (!$('#fld-wa') && $('#fld-mobile')) {
+    const wa = el('div', 'f-wa');
+    wa.id = 'fld-wa'; wa.hidden = true;
+    wa.innerHTML =
+      '<label class="f-consent f-check"><input type="checkbox" id="waSame" checked>' +
+      '<span class="box" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>' +
+      '<span>My WhatsApp is on this number</span></label>' +
+      '<div class="f-field" id="fld-whatsapp" hidden>' +
+      '<label class="lbl" for="whatsapp">WhatsApp number <span class="key-tag" hidden></span></label>' +
+      '<input class="input tnum" id="whatsapp" name="whatsapp" type="tel" inputmode="tel" maxlength="24" autocomplete="off" enterkeyhint="next" placeholder="+44 7700 900123" aria-describedby="hint-whatsapp err-whatsapp">' +
+      '<p class="hint" id="hint-whatsapp">The number your WhatsApp is on, with country code.</p>' +
+      '<p class="field-error" id="err-whatsapp" hidden></p></div>';
+    $('#fld-mobile').after(wa);
+  }
   const body = $('#form-body');
   const steps = $$('.f-step', f);
   const btnNext = $('#btn-next');
@@ -255,10 +277,15 @@ const form = (() => {
   let consent = false;
   const attempted = new Set();
 
-  const fields = ['productService', 'location', 'fullName', 'mobile', 'email', 'message'];
+  const fields = ['productService', 'location', 'fullName', 'mobile', 'whatsapp', 'email', 'message'];
   // Which step-3 field each contact method relies on, and the tag shown on its label.
   const KEY_FIELD = { whatsapp: 'mobile', messenger: 'fullName', email: 'email', phone: 'mobile' };
-  const KEY_TAG = { whatsapp: 'For WhatsApp', messenger: 'For Messenger', email: 'For email', phone: 'For calls and texts' };
+  const KEY_TAG = { whatsapp: 'For calls and WhatsApp', messenger: 'For Messenger', email: 'For email', phone: 'For calls and texts' };
+  const waSeparate = () => draft.preferredContact === 'whatsapp' && draft.waSame === false;
+  const keyField = () => (waSeparate() ? 'whatsapp' : KEY_FIELD[draft.preferredContact]);
+  const keyTag = () => (waSeparate() ? 'We’ll message you here' : KEY_TAG[draft.preferredContact]);
+  // How we'll reach them: the number or email the chosen method uses.
+  const contactHandle = () => (draft.preferredContact === 'email' ? draft.email.trim() : waNumberOf(draft) || draft.mobile.trim());
 
   /* -- bind inputs to the shared draft -- */
   fields.forEach(name => {
@@ -617,8 +644,12 @@ const form = (() => {
   }));
   $$('input[name=preferredContact]', f).forEach(r => r.addEventListener('change', () => {
     draft.preferredContact = r.value; setError('preferredContact', ''); syncMethodHints();
-    revealNext($('#fld-' + KEY_FIELD[r.value]));
+    revealNext($('#fld-' + keyField()));
   }));
+  $('#waSame').addEventListener('change', e => {
+    draft.waSame = e.target.checked; syncMethodHints();
+    if (!draft.waSame) { revealNext($('#fld-whatsapp')); f.elements.whatsapp.focus({ preventScroll: true }); }
+  });
   $('#consent').addEventListener('change', e => { consent = e.target.checked; if (consent) setError('consent', ''); });
 
   /* -- area chips -- */
@@ -704,18 +735,23 @@ const form = (() => {
   function syncMethodHints() {
     const nameHint = $('#hint-fullName'); // missing on pages pasted before this hint existed
     if (nameHint) nameHint.hidden = draft.preferredContact !== 'messenger';
-    $('#hint-mobile').textContent = draft.preferredContact === 'whatsapp'
-      ? 'Your WhatsApp number, with country code.' : 'Include your country code.';
+    $('#hint-mobile').textContent = 'Include your country code.';
+    // WhatsApp: ask whether it's on the mobile number; if not, show its own field.
+    $('#fld-wa').hidden = draft.preferredContact !== 'whatsapp';
+    $('#fld-whatsapp').hidden = !waSeparate();
+    if (!waSeparate()) setError('whatsapp', '');
     // Highlight the field (and label) we'll use to reach them.
-    const key = KEY_FIELD[draft.preferredContact];
-    ['fullName', 'mobile', 'email'].forEach(name => {
+    const key = keyField();
+    ['fullName', 'mobile', 'whatsapp', 'email'].forEach(name => {
       const fld = $('#fld-' + name);
       if (!fld) return;
       const on = name === key;
       fld.classList.toggle('is-key', on);
       const tag = $('.key-tag', fld);
-      if (tag) { tag.hidden = !on; tag.textContent = on ? KEY_TAG[draft.preferredContact] : ''; }
+      if (tag) { tag.hidden = !on; tag.textContent = on ? keyTag() : ''; }
     });
+    // With a separate WhatsApp number, the mobile number is still the one we call.
+    if (waSeparate()) { const t = $('#fld-mobile .key-tag'); if (t) { t.hidden = false; t.textContent = 'For calls'; } }
   }
 
   /* -- errors -- */
@@ -768,6 +804,7 @@ const form = (() => {
       if (!draft.preferredContact) { setError('preferredContact', 'Choose a contact method.'); bad.push($('input[name=preferredContact]', f)); }
       if (!validateField('fullName')) bad.push(f.elements.fullName);
       if (!validateField('mobile')) bad.push(f.elements.mobile);
+      if (waSeparate() && !validateField('whatsapp')) bad.push(f.elements.whatsapp);
       if (!validateField('email')) bad.push(f.elements.email);
     }
     if (n === 4 && !consent) { setError('consent', 'Please tick the box to continue.'); bad.push($('#consent')); }
@@ -809,7 +846,10 @@ const form = (() => {
     } else if (draft.service === 'hotel') group('When', 2, val('As soon as possible'));
     group('Preferred contact', 3, val(METHODS[draft.preferredContact]));
     const dl = el('dl');
-    [['Name', draft.fullName], ['Mobile', draft.mobile], ['Email', draft.email]].forEach(([k, v]) => {
+    const rows = [['Name', draft.fullName], ['Mobile', draft.mobile]];
+    if (draft.preferredContact === 'whatsapp') rows.push(['WhatsApp', waSeparate() ? draft.whatsapp : 'Same as mobile']);
+    rows.push(['Email', draft.email]);
+    rows.forEach(([k, v]) => {
       const row = el('div'); const dd = el('dd', v.trim() ? '' : 'empty');
       dd.append(v.trim() ? (k === 'Email' ? breakable(v.trim()) : v.trim()) : 'Not given');
       row.append(el('dt', null, k), dd); dl.append(row);
@@ -820,7 +860,7 @@ const form = (() => {
 
   function renderConfirmation(rec) {
     const fu = $('#followup');
-    const how = draft.preferredContact === 'email' ? draft.email.trim() : draft.mobile.trim();
+    const how = contactHandle();
     const howEl = el('span', 'tnum'); howEl.append(breakable(how));
     fu.replaceChildren(el('b', null, 'We’ll contact you by ' + METHODS[draft.preferredContact]), howEl);
     if (typeOf(draft) === 'appointment') {
@@ -944,6 +984,7 @@ const form = (() => {
     datePicker.set(draft.prefDate); datePicker.close();
     $$('input[name=timing]', f).forEach(r => r.checked = r.value === draft.timing);
     $$('input[name=preferredContact]', f).forEach(r => r.checked = r.value === draft.preferredContact);
+    $('#waSame').checked = draft.waSame !== false;
     fields.forEach(n => { f.elements[n].value = draft[n]; });
     $('#msg-count').textContent = draft.message.length + '/1000';
     syncServiceExtras(false); syncMethodHints(); syncChips();

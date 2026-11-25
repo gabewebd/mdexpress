@@ -971,6 +971,10 @@ dialog.mxf.is-open::backdrop{opacity:1}
 .mxf .f-consent:has(input:checked) .box svg{opacity:1;transform:none}
 .mxf .f-consent:has(input:focus-visible) .box{outline:2px solid var(--blue);outline-offset:3px}
 .mxf .f-consent:has(input[aria-invalid="true"]) .box{border-color:var(--red)}
+/* WhatsApp: "same number" checkbox under Mobile, and the WhatsApp number field it reveals */
+.mxf .f-check{margin-top:14px;align-items:center}
+.mxf .f-wa .f-field{margin-top:18px}
+.mxf .f-wa,.mxf .f-wa .f-field{animation:mxf-reveal 240ms var(--ease-out) backwards}
 .mxf .proto-inline{display:flex;gap:8px;align-items:flex-start;margin-top:18px;font-size:13.5px;color:var(--muted);line-height:1.45}
 .mxf .proto-inline .icon{width:17px;height:17px;margin-top:1px}
 .mxf .form-alert{margin-top:16px}
