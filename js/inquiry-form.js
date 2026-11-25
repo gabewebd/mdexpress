@@ -188,15 +188,27 @@ const form = (() => {
   }));
   const typeTarget = () => $('#grp-inquiryType') || $('#inquiryType-btn');
 
-  /* -- custom date picker (dialog + grid of day buttons). Every date field uses this. -- */
+  /* -- custom date picker (dialog + grid of day buttons). Every date field uses this.
+        Days and months out of range use aria-disabled, not disabled: a disabled button loses focus, and losing
+        focus used to close the popover. Pressing one now shows a short note in the popover instead. -- */
   const datePicker = (() => {
     const wrap = $('#dp'), btn = $('#prefDate-btn'), pop = $('#dp-pop'), days = $('#dp-days'), title = $('#dp-month'), input = f.elements.prefDate;
+    const prev = $('#dp-prev'), next = $('#dp-next');
     const valueEl = $('.dd-value', btn);
     const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const today = () => { const n = manilaNow(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); };
     const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
     const minD = () => today(), maxD = () => addDays(today(), 60);   // requests up to two months ahead
     const clamp = d => (d < minD() ? minD() : d > maxD() ? maxD() : d);
+    const ym = d => d.getFullYear() * 12 + d.getMonth();
+    const isOff = b => b.getAttribute('aria-disabled') === 'true';
+    const MSG_PAST = 'Dates before today aren’t available.';
+    const msgLate = () => `You can request up to ${maxD().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}, two months ahead.`;
+    pop.tabIndex = -1;   // a click on empty space inside keeps focus in the popover
+    const note = el('p', 'pick-note');
+    note.setAttribute('role', 'status'); note.hidden = true;
+    pop.append(note);
+    const say = msg => { note.hidden = !msg; note.textContent = msg || ''; };
     let view = today(), focusD = today();
     function render() {
       title.textContent = view.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
@@ -211,16 +223,15 @@ const form = (() => {
         b.setAttribute('aria-label', d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }));
         b.setAttribute('aria-pressed', String(input.value === v));
         if (v === iso(today())) { b.classList.add('is-today'); b.setAttribute('aria-current', 'date'); }
-        b.disabled = d < minD() || d > maxD();
+        if (d < minD() || d > maxD()) b.setAttribute('aria-disabled', 'true');
         b.tabIndex = v === iso(focusD) ? 0 : -1;
         const td = el('td'); td.append(b); row.append(td);
         if ((lead + n) % 7 === 0) { rows.push(row); row = el('tr'); }
       }
       if (row.children.length) { while (row.children.length < 7) row.append(el('td')); rows.push(row); }
       days.replaceChildren(...rows);
-      const ym = d => d.getFullYear() * 12 + d.getMonth();
-      $('#dp-prev').disabled = ym(view) <= ym(minD());
-      $('#dp-next').disabled = ym(view) >= ym(maxD());
+      prev.setAttribute('aria-disabled', String(ym(view) <= ym(minD())));
+      next.setAttribute('aria-disabled', String(ym(view) >= ym(maxD())));
     }
     function moveTo(d, focusIt = true) {
       focusD = clamp(d);
@@ -228,8 +239,14 @@ const form = (() => {
       render();
       if (focusIt) { const b = $(`.dp-day[data-date="${iso(focusD)}"]`, days); if (b) b.focus({ preventScroll: true }); }
     }
+    // Keyboard moves: stop at the ends of the range and say why.
+    function keyTo(d) {
+      say(d < minD() ? MSG_PAST : d > maxD() ? msgLate() : '');
+      moveTo(d);
+    }
     function openPop() {
       if (!pop.hidden) return;
+      say('');
       pop.hidden = false; wrap.classList.add('is-open'); btn.setAttribute('aria-expanded', 'true');
       moveTo(input.value ? fromIso(input.value) : today());
       requestAnimationFrame(() => pop.scrollIntoView({ block: 'nearest', behavior: reduceMotion.matches ? 'auto' : 'smooth' }));
@@ -247,20 +264,27 @@ const form = (() => {
     }
     btn.addEventListener('click', () => (pop.hidden ? openPop() : closePop()));
     btn.addEventListener('keydown', e => { if (e.key === 'ArrowDown') { e.preventDefault(); openPop(); } });
-    $('#dp-prev').addEventListener('click', () => moveTo(new Date(view.getFullYear(), view.getMonth() - 1, Math.min(focusD.getDate(), 28)), false));
-    $('#dp-next').addEventListener('click', () => moveTo(new Date(view.getFullYear(), view.getMonth() + 1, Math.min(focusD.getDate(), 28)), false));
+    prev.addEventListener('click', () => {
+      if (isOff(prev)) { say(MSG_PAST); return; }
+      say(''); moveTo(new Date(view.getFullYear(), view.getMonth() - 1, Math.min(focusD.getDate(), 28)), false);
+    });
+    next.addEventListener('click', () => {
+      if (isOff(next)) { say(msgLate()); return; }
+      say(''); moveTo(new Date(view.getFullYear(), view.getMonth() + 1, Math.min(focusD.getDate(), 28)), false);
+    });
     $$('[data-quick]', pop).forEach(q => q.addEventListener('click', () => { set(iso(addDays(today(), +q.dataset.quick)), true); closePop(); }));
     days.addEventListener('click', e => {
       const b = e.target.closest('.dp-day');
-      if (!b || b.disabled) return;
+      if (!b) return;
+      if (isOff(b)) { say(b.dataset.date < iso(minD()) ? 'That date has passed.' : msgLate()); return; }
       set(b.dataset.date, true); closePop();
     });
     days.addEventListener('keydown', e => {
       const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[e.key];
-      if (step) { e.preventDefault(); moveTo(addDays(focusD, step)); }
-      else if (e.key === 'PageUp' || e.key === 'PageDown') { e.preventDefault(); moveTo(new Date(focusD.getFullYear(), focusD.getMonth() + (e.key === 'PageUp' ? -1 : 1), focusD.getDate())); }
-      else if (e.key === 'Home') { e.preventDefault(); moveTo(addDays(focusD, -focusD.getDay())); }
-      else if (e.key === 'End') { e.preventDefault(); moveTo(addDays(focusD, 6 - focusD.getDay())); }
+      if (step) { e.preventDefault(); keyTo(addDays(focusD, step)); }
+      else if (e.key === 'PageUp' || e.key === 'PageDown') { e.preventDefault(); keyTo(new Date(focusD.getFullYear(), focusD.getMonth() + (e.key === 'PageUp' ? -1 : 1), focusD.getDate())); }
+      else if (e.key === 'Home') { e.preventDefault(); keyTo(addDays(focusD, -focusD.getDay())); }
+      else if (e.key === 'End') { e.preventDefault(); keyTo(addDays(focusD, 6 - focusD.getDay())); }
     });
     pop.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closePop(); } });   // don't close the sheet
     document.addEventListener('pointerdown', e => { if (!pop.hidden && !wrap.contains(e.target)) closePop(false); });
@@ -269,12 +293,20 @@ const form = (() => {
     return { set, close: () => closePop(false) };
   })();
 
-  /* -- custom time picker (dialog + grid of time buttons). Every time field uses this. -- */
+  /* -- custom time picker: the four parts of the day as tabs, then that part's half-hour times (no long scroll).
+        On today's date, times that have passed in Boracay are greyed out; pressing one says why. -- */
   const timePicker = (() => {
     const wrap = $('#tp'), btn = $('#prefTime-btn'), pop = $('#tp-pop'), box = $('#tp-slots'), input = f.elements.prefTime;
     const valueEl = $('.dd-value', btn);
-    const GROUPS = [['Early morning', 0, 6], ['Morning', 6, 12], ['Afternoon', 12, 18], ['Evening', 18, 24]];
+    const PERIODS = [
+      { name: 'Early', range: '12–6 am', from: 0 },
+      { name: 'Morning', range: '6 am–12 nn', from: 6 },
+      { name: 'Afternoon', range: '12–6 pm', from: 12 },
+      { name: 'Evening', range: '6 pm–12 mn', from: 18 }
+    ];
     const pad = n => String(n).padStart(2, '0');
+    const slotsOf = p => { const out = []; for (let h = p.from; h < p.from + 6; h++) for (const m of [0, 30]) out.push(`${pad(h)}:${pad(m)}`); return out; };
+    const periodOf = v => PERIODS.findIndex(p => +v.slice(0, 2) >= p.from && +v.slice(0, 2) < p.from + 6);
     // On today's date, times that have already passed in Boracay can't be picked.
     const isPast = v => {
       const now = manilaNow();
@@ -282,41 +314,72 @@ const form = (() => {
       const [h, m] = v.split(':').map(Number);
       return h * 60 + m <= now.getHours() * 60 + now.getMinutes();
     };
-    const enabled = () => $$('.tp-slot:not(:disabled)', box);
-    function render() {
-      const parts = [];
-      GROUPS.forEach(([name, from, to]) => {
-        const grid = el('div', 'tp-grid');
-        grid.setAttribute('role', 'group'); grid.setAttribute('aria-label', name);
-        for (let h = from; h < to; h++) for (const m of [0, 30]) {
-          const v = `${pad(h)}:${pad(m)}`;
-          const b = el('button', 'tp-slot', fmtTime(v));
-          b.type = 'button'; b.dataset.time = v; b.tabIndex = -1;
-          b.setAttribute('aria-pressed', String(input.value === v));
-          b.disabled = isPast(v);
-          grid.append(b);
-        }
-        parts.push(el('p', 'tp-group', name), grid);
-      });
-      box.replaceChildren(...parts);
+    const isOff = b => b.getAttribute('aria-disabled') === 'true';
+    pop.tabIndex = -1;   // a click on empty space inside keeps focus in the popover
+    const tabs = el('div', 'tp-periods');
+    tabs.setAttribute('role', 'group'); tabs.setAttribute('aria-label', 'Part of the day');
+    const grid = el('div', 'tp-grid');
+    grid.setAttribute('role', 'group');
+    const note = el('p', 'pick-note');
+    note.setAttribute('role', 'status'); note.hidden = true;
+    box.classList.add('tp-body');
+    box.replaceChildren(tabs, grid, note);
+    const say = msg => { note.hidden = !msg; note.textContent = msg || ''; };
+    const slots = () => $$('.tp-slot', grid);
+    const cols = () => getComputedStyle(grid).gridTemplateColumns.split(' ').length || 3;
+    let current = 1;
+
+    function renderTabs() {
+      tabs.replaceChildren(...PERIODS.map((p, i) => {
+        const b = el('button', 'tp-period');
+        b.type = 'button'; b.dataset.i = i;
+        b.setAttribute('aria-pressed', String(i === current));
+        b.tabIndex = i === current ? 0 : -1;
+        b.classList.toggle('is-past', slotsOf(p).every(isPast));
+        b.append(el('span', 'tp-period-name', p.name), el('span', 'tp-period-range', p.range));
+        return b;
+      }));
+    }
+    function renderGrid() {
+      const p = PERIODS[current];
+      grid.setAttribute('aria-label', `${p.name}, ${p.range}`);
+      grid.replaceChildren(...slotsOf(p).map(v => {
+        const [hm, ap] = fmtTime(v).split(' ');
+        const b = el('button', 'tp-slot');
+        b.type = 'button'; b.dataset.time = v; b.tabIndex = -1;
+        b.setAttribute('aria-label', fmtTime(v));
+        b.setAttribute('aria-pressed', String(input.value === v));
+        if (isPast(v)) b.setAttribute('aria-disabled', 'true');
+        b.append(el('span', 'tp-hm', hm), el('span', 'tp-ap', ap));
+        return b;
+      }));
+      const free = slots().filter(b => !isOff(b));
+      say(free.length ? '' : 'These times have passed for today. Choose a later part of the day.');
+      const first = free.find(b => b.dataset.time === input.value) || free[0];
+      if (first) first.tabIndex = 0;
+    }
+    function showPeriod(i) {
+      current = (i + PERIODS.length) % PERIODS.length;
+      renderTabs(); renderGrid();
     }
     function focusSlot(b) {
-      enabled().forEach(x => { x.tabIndex = -1; });
       if (!b) return;
-      b.tabIndex = 0;
-      b.focus({ preventScroll: true });
-      const top = b.offsetTop - 44, bottom = b.offsetTop + b.offsetHeight + 4;   // 44 = sticky group label
-      if (top < box.scrollTop) box.scrollTop = top;
-      else if (bottom > box.scrollTop + box.clientHeight) box.scrollTop = bottom - box.clientHeight;
+      slots().forEach(x => { x.tabIndex = -1; });
+      b.tabIndex = 0; b.focus({ preventScroll: true });
     }
     function openPop() {
       if (!pop.hidden) return;
-      render();
+      // Open on the chosen time's part of the day, else the first part with a free time from the morning on.
+      let i = input.value ? periodOf(input.value) : -1;
+      if (i < 0) {
+        const order = [1, 2, 3, 0];
+        i = order.find(k => slotsOf(PERIODS[k]).some(v => !isPast(v)));
+        if (i == null) i = 1;
+      }
+      showPeriod(i);
       pop.hidden = false; wrap.classList.add('is-open'); btn.setAttribute('aria-expanded', 'true');
-      // Open on the chosen time, else the first free daytime slot (most visits are booked from 6 am on).
-      const start = $(`.tp-slot[data-time="${input.value}"]:not(:disabled)`, box)
-        || enabled().find(b => b.dataset.time >= '06:00') || enabled()[0];
-      if (start) { box.scrollTop = Math.max(0, start.offsetTop - box.clientHeight / 2); focusSlot(start); }
+      const start = slots().find(b => b.tabIndex === 0) || $('.tp-period[aria-pressed="true"]', tabs);
+      if (start) start.focus({ preventScroll: true });
       requestAnimationFrame(() => pop.scrollIntoView({ block: 'nearest', behavior: reduceMotion.matches ? 'auto' : 'smooth' }));
     }
     function closePop(refocus = true) {
@@ -332,20 +395,37 @@ const form = (() => {
     }
     btn.addEventListener('click', () => (pop.hidden ? openPop() : closePop()));
     btn.addEventListener('keydown', e => { if (e.key === 'ArrowDown') { e.preventDefault(); openPop(); } });
-    box.addEventListener('click', e => {
+    tabs.addEventListener('click', e => {
+      const b = e.target.closest('.tp-period');
+      if (!b) return;
+      showPeriod(+b.dataset.i);
+      $('.tp-period[aria-pressed="true"]', tabs).focus({ preventScroll: true });
+    });
+    tabs.addEventListener('keydown', e => {
+      const step = { ArrowLeft: -1, ArrowRight: 1 }[e.key];
+      if (step) { e.preventDefault(); showPeriod(current + step); $('.tp-period[aria-pressed="true"]', tabs).focus({ preventScroll: true }); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); focusSlot(slots().find(b => b.tabIndex === 0) || slots()[0]); }
+    });
+    grid.addEventListener('click', e => {
       const b = e.target.closest('.tp-slot');
-      if (!b || b.disabled) return;
+      if (!b) return;
+      if (isOff(b)) { say('That time has passed. Choose a later time.'); return; }
       set(b.dataset.time, true); closePop();
     });
-    box.addEventListener('keydown', e => {
-      const list = enabled(), i = list.indexOf(document.activeElement);
-      const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -4, ArrowDown: 4 }[e.key];
-      if (step) { e.preventDefault(); focusSlot(list[Math.min(list.length - 1, Math.max(0, i + step))]); }
+    grid.addEventListener('keydown', e => {
+      const list = slots(), i = list.indexOf(document.activeElement), c = cols();
+      const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -c, ArrowDown: c }[e.key];
+      if (step) {
+        e.preventDefault();
+        if (i + step < 0 && e.key === 'ArrowUp') { $('.tp-period[aria-pressed="true"]', tabs).focus({ preventScroll: true }); return; }
+        focusSlot(list[Math.min(list.length - 1, Math.max(0, i + step))]);
+      }
       else if (e.key === 'Home') { e.preventDefault(); focusSlot(list[0]); }
       else if (e.key === 'End') { e.preventDefault(); focusSlot(list[list.length - 1]); }
     });
     pop.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closePop(); } });   // don't close the sheet
     document.addEventListener('pointerdown', e => { if (!pop.hidden && !wrap.contains(e.target)) closePop(false); });
+    // Switching parts of the day replaces the focused button, so check focus after the switch settles.
     pop.addEventListener('focusout', () => setTimeout(() => { if (!wrap.contains(document.activeElement)) closePop(false); }, 0));
     return {
       set,
