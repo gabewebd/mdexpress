@@ -17,9 +17,10 @@ python -m http.server 5180
 
 ```
 index.html                 all sections, the three contact overlays, the shared SVG defs (symbol, masks, icons)
-css/styles.css             tokens at the top (:root), then sections, overlays, motion, breakpoints
-js/inquiry.js              the inquiry record, validation rules and the CRM integration point
-js/main.js                 header, overlays, accordion, reveals, the guided form
+css/styles.css             the only stylesheet: tokens (:root), sections, overlays, motion, breakpoints,
+                           then the Contact Us form (dialog.mxf)
+js/main.js                 the only script, in sections that each run only where their markup is:
+                           1 inquiry data + GHL webhook, 2 Contact Us form, 3 landing page
 assets/brand/              MedExpress logo (original + reversed) and the symbol favicon
 assets/svg/                MedX symbol set: illuminated (cover treatment), navy, ivory, single quadrant
 assets/icons/              the 1.5px line icon family (also inlined in index.html as a sprite)
@@ -52,7 +53,7 @@ None of them shows MedX staff or facilities. Replace them with MedX photography 
 
 ## CRM (GoHighLevel) integration
 
-Nothing is sent anywhere. The form builds one record (`buildRecord` in `js/inquiry.js`) and hands it to
+Nothing is sent anywhere. The form builds one record (`buildRecord` in `js/main.js`, section 1) and hands it to
 `MedXInquiry.submit(record)`, which currently waits 900 ms and resolves. Replace the body of `submit()` with the
 GHL call (webhook or inbound-lead endpoint); it must resolve on success and reject on failure, and the form already
 shows the error path. Record fields (same as the prototype): source, inquiry_type (questionnaire names), service_interest, care_for,
@@ -60,8 +61,8 @@ preferred_timing, preferred_date, preferred_time, booking_status, full_name, mob
 location, message, consent_to_contact, created_at. Don't add medical-history fields.
 
 The Contact Us form is ported from `prototype/src/medx-inquiry-prototype.src.html`: markup in `#dlg-contact`,
-styles in `css/inquiry-form.css` (scoped to `dialog.mxf`; clashing class names carry an `f-` prefix), behaviour in
-`js/inquiry-form.js`. The site's overlay code in `main.js` opens and closes it and calls `window.MedXForm`.
+styles in the Contact Us section of `css/styles.css` (scoped to `dialog.mxf`; clashing class names carry an `f-` prefix),
+behaviour in section 2 of `js/main.js`. Section 3 (the site's overlay code) opens and closes it and calls `window.MedXForm`.
 
 ## Not invented
 
