@@ -82,7 +82,7 @@ const form = (() => {
   const fields = ['productService', 'location', 'fullName', 'mobile', 'email', 'message'];
   // Which step-3 field each contact method relies on, and the tag shown on its label.
   const KEY_FIELD = { whatsapp: 'mobile', messenger: 'fullName', email: 'email', phone: 'mobile' };
-  const KEY_TAG = { whatsapp: 'For WhatsApp', messenger: 'For Messenger', email: 'For email', phone: 'For calls' };
+  const KEY_TAG = { whatsapp: 'For WhatsApp', messenger: 'For Messenger', email: 'For email', phone: 'For calls and texts' };
 
   /* -- bind inputs to the shared draft -- */
   fields.forEach(name => {
