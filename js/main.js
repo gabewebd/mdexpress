@@ -283,7 +283,7 @@ const form = (() => {
   const KEY_TAG = { whatsapp: 'For calls and WhatsApp', messenger: 'For Messenger', email: 'For email', phone: 'For calls and texts' };
   const waSeparate = () => draft.preferredContact === 'whatsapp' && draft.waSame === false;
   const keyField = () => (waSeparate() ? 'whatsapp' : KEY_FIELD[draft.preferredContact]);
-  const keyTag = () => (waSeparate() ? 'We’ll message you here' : KEY_TAG[draft.preferredContact]);
+  const keyTag = () => (waSeparate() ? 'For messages and calls' : KEY_TAG[draft.preferredContact]);
   // How we'll reach them: the number or email the chosen method uses.
   const contactHandle = () => (draft.preferredContact === 'email' ? draft.email.trim() : waNumberOf(draft) || draft.mobile.trim());
 
@@ -750,8 +750,6 @@ const form = (() => {
       const tag = $('.key-tag', fld);
       if (tag) { tag.hidden = !on; tag.textContent = on ? keyTag() : ''; }
     });
-    // With a separate WhatsApp number, the mobile number is still the one we call.
-    if (waSeparate()) { const t = $('#fld-mobile .key-tag'); if (t) { t.hidden = false; t.textContent = 'For calls'; } }
   }
 
   /* -- errors -- */
